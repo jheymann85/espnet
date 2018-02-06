@@ -84,7 +84,7 @@ class SeqUpdaterKaldi(training.StandardUpdater):
         self.reader = reader
 
     # The core part of the update routine can be customized by overriding.
-    def update_core(self):
+    def _update_core(self):
         # When we pass one iterator and optimizer to StandardUpdater.__init__,
         # they are automatically named 'main'.
         train_iter = self.get_iterator('main')
@@ -113,6 +113,26 @@ class SeqUpdaterKaldi(training.StandardUpdater):
         else:
             optimizer.update()
         delete_feat(x)
+
+    def update_core(self):
+        try:
+            self._update_core()
+        except Exception:
+            # Try to fallback to CPU in case of memory/CUDA error
+            try:
+                optimizer = self.get_optimizer('main')
+                model = optimizer.target
+                model.to_cpu()
+                gpu_id = self.device
+                self.device = -1
+                self._update_core()
+                model.cleargrads()
+                model.to_gpu(gpu_id)
+                self.device = gpu_id
+            except:
+                raise
+        else:
+            self.get_optimizer('main').target.cleargrads()
 
 
 # Custom trigger

@@ -76,12 +76,12 @@ class Loss(chainer.Chain):
         self.loss = alpha * loss_ctc + (1 - alpha) * loss_att
 
         if self.loss.data < CTC_LOSS_THRESHOLD and not math.isnan(self.loss.data):
-            reporter.report({'loss_ctc': loss_ctc}, self)
-            reporter.report({'loss_att': loss_att}, self)
-            reporter.report({'acc': acc}, self)
+            reporter.report({'loss_ctc': cuda.to_cpu(loss_ctc.data)}, self)
+            reporter.report({'loss_att': cuda.to_cpu(loss_att.data)}, self)
+            reporter.report({'acc': cuda.to_cpu(acc.data)}, self)
 
             logging.info('mtl loss:' + str(self.loss.data))
-            reporter.report({'loss': self.loss}, self)
+            reporter.report({'loss': cuda.to_cpu(self.loss.data)}, self)
         else:
             logging.warning('loss (=%f) is not correct', self.loss.data)
 
