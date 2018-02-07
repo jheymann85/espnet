@@ -117,7 +117,7 @@ class SeqUpdaterKaldi(training.StandardUpdater):
     def update_core(self):
         try:
             self._update_core()
-        except Exception:
+        except cuda.cupy.cuda.memory.OutOfMemoryError:
             # Try to fallback to CPU in case of memory/CUDA error
             try:
                 optimizer = self.get_optimizer('main')
